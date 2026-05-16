@@ -1,6 +1,9 @@
+# Force default directory index targets
+DirectoryIndex index.php index.html
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
     
-    # Force the server to read from the public folder implicitly
+    # Silently forward all root web traffic directly into the Laravel public/ folder
     RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
