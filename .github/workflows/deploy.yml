@@ -28,10 +28,12 @@ jobs:
           echo "DB_PASSWORD=${{ secrets.PRODUCTION_DB_PASS }}" >> .env
 
       # 2. ZIP THE BACKEND FOLDER (Which now contains your React build and Vendor folder)
+      # 2. ZIP ONLY THE PRODUCTION BACKEND CONTENTS
       - name: Zip Backend Directory
         run: |
-          zip -r release.zip backend/
-
+          cd backend
+          zip -r ../release.zip .
+          cd ..
       # 3. Upload the single zip file via FTP
       - name: Upload Zip via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
