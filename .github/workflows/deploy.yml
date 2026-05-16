@@ -1,4 +1,4 @@
-name: Deploy Backend + Embedded React
+name: Super-Fast Local Zip Deployment
 
 on:
   push:
@@ -6,20 +6,14 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup PHP Environment
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.4'
-          coverage: none
-
-      # 1. Inject Production Environment
+      # 1. Create the Production .env file on the fly
       - name: Create Production .env File
         run: |
           cd backend
@@ -33,18 +27,12 @@ jobs:
           echo "DB_USERNAME=${{ secrets.PRODUCTION_DB_USER }}" >> .env
           echo "DB_PASSWORD=${{ secrets.PRODUCTION_DB_PASS }}" >> .env
 
-      # 2. Install production PHP packages on the cloud runner
-      - name: Install Laravel Dependencies
-        run: |
-          cd backend
-          composer install --no-dev --optimize-autoloader --prefer-dist --no-progress
-
-      # 3. ZIP ONLY THE BACKEND (React is already inside backend/public!)
+      # 2. ZIP THE BACKEND FOLDER (Which now contains your React build and Vendor folder)
       - name: Zip Backend Directory
         run: |
           zip -r release.zip backend/
 
-      # 4. Upload just the single archive file over FTP
+      # 3. Upload the single zip file via FTP
       - name: Upload Zip via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
