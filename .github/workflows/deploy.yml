@@ -10,10 +10,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Pull your repository code into the runner workspace
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 1. Create the Production .env file on the fly
+      # Step 2: Set up PHP briefly to allow zip commands to bundle files smoothly
+      - name: Setup PHP Environment
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      # Step 3: Inject your production variables dynamically into backend/.env
       - name: Create Production .env File
         run: |
           cd backend
@@ -27,14 +35,14 @@ jobs:
           echo "DB_USERNAME=${{ secrets.PRODUCTION_DB_USER }}" >> .env
           echo "DB_PASSWORD=${{ secrets.PRODUCTION_DB_PASS }}" >> .env
 
-      # 2. ZIP THE BACKEND FOLDER (Which now contains your React build and Vendor folder)
-      # 2. ZIP ONLY THE PRODUCTION BACKEND CONTENTS
-      - name: Zip Backend Directory
+      # Step 4: Zip ONLY the contents inside backend/ (React build, .htaccess, vendor, and .env are inside)
+      - name: Zip Backend Directory Contents
         run: |
           cd backend
           zip -r ../release.zip .
           cd ..
-      # 3. Upload the single zip file via FTP
+
+      # Step 5: Upload the clean release.zip blindly over FTP using an isolated sync state map
       - name: Upload Zip via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -43,3 +51,5 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           server-dir: ${{ secrets.SERVER_DIR }}
           local-dir: ./
+          dangerous-clean-slate: false
+          state-name: .deploy-zip-state.json
